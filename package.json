@@ -15,7 +15,7 @@
     "type": "git",
     "url": "git+https://github.com/Chi-G/Quill.git"
   },
-  "author": "Chijindu",
+  "author": "Chijindu Nwokeohuru",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/Chi-G/Quill/issues"
@@ -62,7 +62,6 @@
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.12",
     "ts-node-dev": "^2.0.0",
-    "tsx": "^4.23.12",
     "typescript": "^5.9.3"
   }
 }
