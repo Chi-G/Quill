@@ -147,7 +147,7 @@ graph TD
 
 ## Roadmap: Herald Webhook Engine Integration
 
-Quill emits a typed internal event stream (`post.published`, `post.updated`, `post.archived`, `comment.created`, `user.registered`) designed to plug into **Herald** (a multi-tenant webhook delivery API) for reliable, retried, observable webhook dispatch to third-party consumers.
+Quill emits a typed internal event stream (`post.published`, `post.updated`, `post.archived`, `comment.created`, `user.registered`) via `eventBus.ts` and `webhook.service.ts`. This architecture is designed to plug directly into [Herald API](https://github.com/Chi-G/herald-api) and [Herald JS Client](https://github.com/Chi-G/herald-js-client) (a multi-tenant webhook delivery engine) for reliable, retried, and observable webhook dispatch to third-party consumers.
 
 ---
 
