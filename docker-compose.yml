@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb+srv://QuillAdmin:Chibuike4u%40QuillAdmin@clusterquill.qhfb9fo.mongodb.net/quill_cms?retryWrites=true&w=majority&appName=ClusterQuill
+      - REDIS_URL=redis://redis:6379
+      - CORS_ORIGIN=http://localhost:3000
+      - ACCESS_TOKEN_SECRET=quill_super_secret_access_token_key_change_in_production_32chars
+      - ACCESS_TOKEN_EXPIRY=15m
+      - REFRESH_TOKEN_SECRET=quill_super_secret_refresh_token_key_change_in_production_32chars
+      - REFRESH_TOKEN_EXPIRY=7d
+    depends_on:
+      - redis
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: always
