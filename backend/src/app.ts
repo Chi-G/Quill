@@ -1,4 +1,4 @@
-import express, { Express, Request, Response } from "express";
+import express, { Express, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
@@ -53,7 +53,7 @@ app.use("/uploads", express.static("uploads"));
 // Swagger OpenAPI Documentation
 app.use(
   "/api-docs",
-  (req: Request, res: Response, next) => {
+  (req: Request, res: Response, next: NextFunction) => {
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
     next();
   },
