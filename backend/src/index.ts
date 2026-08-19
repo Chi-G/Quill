@@ -3,9 +3,12 @@ import app from "./app.js";
 import { env } from "./config/env.js";
 import { logger } from "./utils/logger.js";
 
+import { WebhookService } from "./services/webhook.service.js";
+
 const startServer = async (): Promise<void> => {
   try {
     await connectDB();
+    WebhookService.initListeners();
 
     const server = app.listen(env.PORT, () => {
       logger.info(`⚙️  Quill Engine running at http://localhost:${env.PORT}`);

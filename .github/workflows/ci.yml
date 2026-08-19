@@ -31,7 +31,7 @@ jobs:
 
       - name: Run Integration Tests
         env:
-          MONGODB_URI: mongodb+srv://QuillAdmin:Chibuike4u%40QuillAdmin@clusterquill.qhfb9fo.mongodb.net/quill_cms_test?retryWrites=true&w=majority&appName=ClusterQuill
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
         run: npm test
 
       - name: Build Production Bundle

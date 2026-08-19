@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware.js";
 import { ApiError } from "../utils/ApiError.js";
+import { WebhookService } from "../services/webhook.service.js";
 import crypto from "crypto";
 
 export const createWebhook = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -35,4 +36,12 @@ export const deleteWebhook = asyncHandler(async (req: AuthenticatedRequest, res:
 
   await Webhook.findByIdAndDelete(req.params.id);
   return res.status(200).json(new ApiResponse(200, {}, "Webhook deleted successfully"));
+});
+
+export const sendTestWebhook = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const webhookId = req.params.id as string;
+  const success = await WebhookService.sendTestEvent(webhookId);
+  if (!success) throw new ApiError(404, "Webhook subscription not found");
+
+  return res.status(200).json(new ApiResponse(200, {}, "Test webhook payload dispatched successfully"));
 });
