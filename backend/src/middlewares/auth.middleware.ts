@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
 import { User, IUser } from "../models/user.model.js";
+import { env } from "../config/env.js";
 
 export interface AuthenticatedRequest extends Request {
   user?: IUser;
@@ -19,10 +20,7 @@ export const verifyJWT = asyncHandler(
         throw new ApiError(401, "Unauthorized request: missing access token");
       }
 
-      const secret =
-        process.env.ACCESS_TOKEN_SECRET || "default_access_secret_32_characters";
-
-      const decodedToken = jwt.verify(token, secret) as { _id: string };
+      const decodedToken = jwt.verify(token, env.ACCESS_TOKEN_SECRET) as { _id: string };
 
       const user = await User.findById(decodedToken._id).select(
         "-password -refreshToken"
