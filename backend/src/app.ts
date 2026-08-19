@@ -51,7 +51,15 @@ app.use(cookieParser());
 app.use("/uploads", express.static("uploads"));
 
 // Swagger OpenAPI Documentation
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use(
+  "/api-docs",
+  (req: Request, res: Response, next) => {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    next();
+  },
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
 
 // Health Check
 app.get("/health", (req: Request, res: Response) => {
