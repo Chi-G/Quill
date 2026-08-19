@@ -1,1 +1,1 @@
-export const DB_NAME = "node-express-backend";
+export const DB_NAME = "quill_cms";

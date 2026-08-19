@@ -9,7 +9,7 @@ export const registerUserSchema = z.object({
       .trim(),
     email: z
       .string({ message: "Email is required" })
-      .email("Invalid email format")
+      .email({ message: "Invalid email format" })
       .toLowerCase()
       .trim(),
     password: z
@@ -23,7 +23,7 @@ export const loginUserSchema = z.object({
   body: z.object({
     email: z
       .string({ message: "Email is required" })
-      .email("Invalid email format")
+      .email({ message: "Invalid email format" })
       .toLowerCase()
       .trim(),
     password: z

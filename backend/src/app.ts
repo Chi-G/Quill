@@ -50,15 +50,50 @@ app.use(cookieParser());
 // Static Uploads Folder
 app.use("/uploads", express.static("uploads"));
 
+const SERVER_BOOT_TIME = Date.now();
+
+// Dev-mode status check for Swagger UI auto-reload
+app.get("/api-docs/dev-status", (req: Request, res: Response) => {
+  return res.json({ bootTime: SERVER_BOOT_TIME });
+});
+
 // Swagger OpenAPI Documentation
+app.use("/api-docs", (req: Request, res: Response, next: NextFunction) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Surrogate-Control", "no-store");
+  next();
+});
+
+const autoReloadScript = `
+  (function() {
+    let currentBoot = null;
+    setInterval(async () => {
+      try {
+        const res = await fetch('/api-docs/dev-status');
+        if (res.ok) {
+          const data = await res.json();
+          if (currentBoot !== null && data.bootTime !== currentBoot) {
+            console.log("🔄 Server restarted! Auto-reloading Swagger UI...");
+            window.location.reload();
+          }
+          currentBoot = data.bootTime;
+        }
+      } catch (e) {}
+    }, 1500);
+  })();
+`;
+
 app.use(
   "/api-docs",
-  (req: Request, res: Response, next: NextFunction) => {
-    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
-    next();
-  },
   swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec)
+  swaggerUi.setup(swaggerSpec, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+    customJs: `data:text/javascript;base64,${Buffer.from(autoReloadScript).toString("base64")}`,
+  })
 );
 
 // Health Check

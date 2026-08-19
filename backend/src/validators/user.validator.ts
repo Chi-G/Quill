@@ -14,6 +14,6 @@ export const updateRoleSchema = z.object({
     id: z.string({ message: "User ID parameter is required" }),
   }),
   body: z.object({
-    role: z.nativeEnum(UserRole, { message: "Invalid user role" }),
+    role: z.enum(UserRole, { message: "Invalid user role" }),
   }),
 });

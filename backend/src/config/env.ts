@@ -12,11 +12,11 @@ const envSchema = z.object({
   ACCESS_TOKEN_SECRET: z
     .string()
     .default("quill_access_token_secret_key_32chars_long_minimum"),
-  ACCESS_TOKEN_EXPIRY: z.string().default("15m"),
+  ACCESS_TOKEN_EXPIRY: z.string().default("1d"),
   REFRESH_TOKEN_SECRET: z
     .string()
     .default("quill_refresh_token_secret_key_32chars_long_minimum"),
-  REFRESH_TOKEN_EXPIRY: z.string().default("7d"),
+  REFRESH_TOKEN_EXPIRY: z.string().default("30d"),
 });
 
 export const env = envSchema.parse(process.env);

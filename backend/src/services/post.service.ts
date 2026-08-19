@@ -1,4 +1,7 @@
+import mongoose from "mongoose";
 import { Post, IPost } from "../models/post.model.js";
+import { Tag } from "../models/tag.model.js";
+import { Category } from "../models/category.model.js";
 import { PostStatus } from "../constants/postStatus.js";
 import { ApiError } from "../utils/ApiError.js";
 import { CacheService } from "./cache.service.js";
@@ -37,6 +40,38 @@ export class PostService {
     const slug = await this.generateUniqueSlug(data.title);
     const readingTime = this.calculateReadingTime(data.content);
 
+    // Resolve Category ObjectId (Find or Create by name/slug)
+    let categoryId = null;
+    if (data.category) {
+      if (mongoose.Types.ObjectId.isValid(data.category)) {
+        categoryId = data.category;
+      } else {
+        const catSlug = slugify(data.category, { lower: true, strict: true });
+        let categoryDoc = await Category.findOne({ slug: catSlug });
+        if (!categoryDoc) {
+          categoryDoc = await Category.create({ name: data.category, slug: catSlug });
+        }
+        categoryId = categoryDoc._id;
+      }
+    }
+
+    // Resolve Tag ObjectIds (Find or Create by name/slug for each tag)
+    const tagIds: mongoose.Types.ObjectId[] = [];
+    if (data.tags && data.tags.length > 0) {
+      for (const tagStr of data.tags) {
+        if (mongoose.Types.ObjectId.isValid(tagStr)) {
+          tagIds.push(new mongoose.Types.ObjectId(tagStr));
+        } else {
+          const tagSlug = slugify(tagStr, { lower: true, strict: true });
+          let tagDoc = await Tag.findOne({ slug: tagSlug });
+          if (!tagDoc) {
+            tagDoc = await Tag.create({ name: tagStr, slug: tagSlug });
+          }
+          tagIds.push(tagDoc._id as mongoose.Types.ObjectId);
+        }
+      }
+    }
+
     const post = await Post.create({
       title: data.title,
       slug,
@@ -44,9 +79,9 @@ export class PostService {
       excerpt: data.excerpt || data.content.substring(0, 160),
       author: authorId,
       status: PostStatus.DRAFT,
-      tags: data.tags || [],
-      category: data.category || null,
-      coverImage: data.coverImage || null,
+      tags: tagIds,
+      category: categoryId,
+      coverImage: (data.coverImage && mongoose.Types.ObjectId.isValid(data.coverImage)) ? data.coverImage : null,
       readingTime,
     });
 
@@ -221,9 +256,38 @@ export class PostService {
     }
 
     if (data.excerpt !== undefined) post.excerpt = data.excerpt;
-    if (data.tags !== undefined) post.tags = data.tags as any;
-    if (data.category !== undefined) post.category = data.category as any;
-    if (data.coverImage !== undefined) post.coverImage = data.coverImage as any;
+    if (data.category !== undefined) {
+      if (!data.category) {
+        post.category = undefined;
+      } else if (mongoose.Types.ObjectId.isValid(data.category)) {
+        post.category = data.category as any;
+      } else {
+        const catSlug = slugify(data.category, { lower: true, strict: true });
+        let categoryDoc = await Category.findOne({ slug: catSlug });
+        if (!categoryDoc) {
+          categoryDoc = await Category.create({ name: data.category, slug: catSlug });
+        }
+        post.category = categoryDoc._id as any;
+      }
+    }
+
+    if (data.tags !== undefined) {
+      const tagIds: mongoose.Types.ObjectId[] = [];
+      for (const tagStr of data.tags) {
+        if (mongoose.Types.ObjectId.isValid(tagStr)) {
+          tagIds.push(new mongoose.Types.ObjectId(tagStr));
+        } else {
+          const tagSlug = slugify(tagStr, { lower: true, strict: true });
+          let tagDoc = await Tag.findOne({ slug: tagSlug });
+          if (!tagDoc) {
+            tagDoc = await Tag.create({ name: tagStr, slug: tagSlug });
+          }
+          tagIds.push(tagDoc._id as mongoose.Types.ObjectId);
+        }
+      }
+      post.tags = tagIds;
+    }
+    if (data.coverImage !== undefined) post.coverImage = (data.coverImage && mongoose.Types.ObjectId.isValid(data.coverImage)) ? data.coverImage as any : undefined;
 
     await post.save();
     await CacheService.del("posts:*");

@@ -146,8 +146,11 @@ const options: swaggerJSDoc.Options = {
             { name: "page", in: "query", schema: { type: "integer", default: 1 } },
             { name: "limit", in: "query", schema: { type: "integer", default: 10 } },
             { name: "search", in: "query", schema: { type: "string" } },
+            { name: "status", in: "query", schema: { type: "string", enum: ["DRAFT", "PENDING_REVIEW", "PUBLISHED", "REJECTED", "ARCHIVED"] } },
             { name: "tag", in: "query", schema: { type: "string" } },
             { name: "category", in: "query", schema: { type: "string" } },
+            { name: "sortBy", in: "query", schema: { type: "string", default: "createdAt" } },
+            { name: "sortOrder", in: "query", schema: { type: "string", enum: ["asc", "desc"], default: "desc" } },
           ],
           responses: { 200: { description: "Article list returned" } },
         },
@@ -244,13 +247,49 @@ const options: swaggerJSDoc.Options = {
                   required: ["content"],
                   properties: {
                     content: { type: "string", example: "Great article!" },
-                    parentComment: { type: "string", description: "Parent comment ID for nested reply" },
+                    parentComment: {
+                      type: "string",
+                      description: "Optional parent comment ObjectId for nested reply (omit this field for top-level comments)",
+                    },
                   },
+                },
+                example: {
+                  content: "Great article!",
                 },
               },
             },
           },
           responses: { 201: { description: "Comment created" } },
+        },
+      },
+      "/comments/{id}": {
+        patch: {
+          tags: ["Comments"],
+          summary: "Update comment content (Owner)",
+          security: [{ bearerAuth: [] }],
+          parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["content"],
+                  properties: {
+                    content: { type: "string", example: "Updated comment text" },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: "Comment updated" } },
+        },
+        delete: {
+          tags: ["Comments"],
+          summary: "Soft-delete comment (Owner, EDITOR, ADMIN)",
+          security: [{ bearerAuth: [] }],
+          parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+          responses: { 200: { description: "Comment soft-deleted" } },
         },
       },
       "/posts/{id}/reactions": {
@@ -317,4 +356,4 @@ const options: swaggerJSDoc.Options = {
   apis: [],
 };
 
-export const swaggerSpec = swaggerJSDoc(options);
+export const swaggerSpec = options.definition;
