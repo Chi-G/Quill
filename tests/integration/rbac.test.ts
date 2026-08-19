@@ -4,6 +4,8 @@ import { User } from "../../backend/src/models/user.model.js";
 import { UserRole } from "../../backend/src/constants/roles.js";
 import { connectTestDb, disconnectTestDb, clearTestDb } from "../setup/testDb.js";
 
+const getRandomEmail = (role: string) => `${role}_${Date.now()}_${Math.floor(Math.random() * 10000)}@example.com`;
+
 describe("RBAC & Editorial Workflow Integration Tests", () => {
   beforeAll(async () => {
     await connectTestDb();
@@ -18,14 +20,15 @@ describe("RBAC & Editorial Workflow Integration Tests", () => {
   });
 
   it("should block USER role from creating a post", async () => {
+    const email = getRandomEmail("user");
     await request(app).post("/api/v1/auth/register").send({
       name: "Normal User",
-      email: "user@example.com",
+      email,
       password: "Password123!",
     });
 
     const loginRes = await request(app).post("/api/v1/auth/login").send({
-      email: "user@example.com",
+      email,
       password: "Password123!",
     });
 
@@ -35,7 +38,7 @@ describe("RBAC & Editorial Workflow Integration Tests", () => {
       .post("/api/v1/posts")
       .set("Authorization", `Bearer ${token}`)
       .send({
-        title: "Unauthorized Article Title",
+        title: `Unauthorized Article Title ${Date.now()}`,
         content: "This is sample article body text exceeding 10 characters.",
       });
 
@@ -43,15 +46,16 @@ describe("RBAC & Editorial Workflow Integration Tests", () => {
   });
 
   it("should allow AUTHOR to create post and submit for review", async () => {
+    const email = getRandomEmail("author");
     await User.create({
       name: "Author User",
-      email: "author@example.com",
+      email,
       password: "Password123!",
       role: UserRole.AUTHOR,
     });
 
     const loginRes = await request(app).post("/api/v1/auth/login").send({
-      email: "author@example.com",
+      email,
       password: "Password123!",
     });
 
@@ -61,7 +65,7 @@ describe("RBAC & Editorial Workflow Integration Tests", () => {
       .post("/api/v1/posts")
       .set("Authorization", `Bearer ${token}`)
       .send({
-        title: "Author Article Title",
+        title: `Author Article Title ${Date.now()}`,
         content: "This is sample article body text exceeding 10 characters.",
       });
 
@@ -79,22 +83,25 @@ describe("RBAC & Editorial Workflow Integration Tests", () => {
   });
 
   it("should allow EDITOR to approve pending article", async () => {
+    const authorEmail = getRandomEmail("author");
+    const editorEmail = getRandomEmail("editor");
+
     await User.create({
       name: "Author User",
-      email: "author@example.com",
+      email: authorEmail,
       password: "Password123!",
       role: UserRole.AUTHOR,
     });
 
     await User.create({
       name: "Editor User",
-      email: "editor@example.com",
+      email: editorEmail,
       password: "Password123!",
       role: UserRole.EDITOR,
     });
 
     const authorLogin = await request(app).post("/api/v1/auth/login").send({
-      email: "author@example.com",
+      email: authorEmail,
       password: "Password123!",
     });
 
@@ -102,7 +109,7 @@ describe("RBAC & Editorial Workflow Integration Tests", () => {
       .post("/api/v1/posts")
       .set("Authorization", `Bearer ${authorLogin.body.data.accessToken}`)
       .send({
-        title: "Pending Article Title",
+        title: `Pending Article Title ${Date.now()}`,
         content: "This is sample article body text exceeding 10 characters.",
       });
 
@@ -113,7 +120,7 @@ describe("RBAC & Editorial Workflow Integration Tests", () => {
       .set("Authorization", `Bearer ${authorLogin.body.data.accessToken}`);
 
     const editorLogin = await request(app).post("/api/v1/auth/login").send({
-      email: "editor@example.com",
+      email: editorEmail,
       password: "Password123!",
     });
 
